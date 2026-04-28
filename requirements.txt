@@ -1,35 +1,4 @@
-# ================================================
-# requirements.txt pour AnimTrack (Projet INF 232)
-# ================================================
-# Ce fichier liste toutes les bibliothèques Python
-# nécessaires pour le backend qui sert le frontend
-# HTML/CSS/JS et les images locales.
-# ================================================
-
-# Framework Web
-Flask==2.3.3
-Flask-CORS==4.0.0
-
-# Analyse et ML
-numpy==1.24.3
-pandas==2.0.3
-scikit-learn==1.3.0
-scipy==1.11.1
-matplotlib==3.7.2    # (pour générer des graphiques si besoin)
-
-# Gestion des dates
-python-dateutil==2.8.2
-
-# Pour la persistance des données (SQLite inclus dans Python)
-# Pas de driver supplémentaire nécessaire
-
-# Utilitaires
-python-dotenv==1.0.0   # optionnel, pour variables d'environnement
-
-# ================================================
-# Commandes d'installation :
-#   pip install -r requirements.txt
-# ================================================
-# Lancement du serveur :
-#   python app.py   (ou python api.py selon le nom du fichier backend)
-# ================================================
+setuptools
+wheel
+flask
+gunicorn
