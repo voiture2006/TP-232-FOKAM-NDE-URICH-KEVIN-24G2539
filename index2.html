@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimTrack Pro | Solution Intelligente de Gestion d'Elevage</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --primary: #1B5E20; --primary-light: #2E7D32; --primary-dark: #0D3311;
+            --accent: #FF8F00; --accent-light: #FFB300; --gold: #D4A853;
+            --gold-light: #F0E4C8; --cream: #F5F0E8; --brown: #3E2723;
+            --text-dark: #1A1A1A; --text-gray: #666666; --white: #FFFFFF;
+            --off-white: #FAFAFA; --border: #E0E0E0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08); --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 40px rgba(0,0,0,0.16); --shadow-xl: 0 20px 60px rgba(0,0,0,0.2);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 20px; --radius-xl: 28px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f0f4ff; margin: 0; color: var(--text-dark); line-height: 1.6; overflow-x: hidden; }
+        
+        .navbar-main { 
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000; 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
+            border-bottom: 1px solid rgba(27,94,32,0.1); 
+            transition: var(--transition); 
+        }
+        .navbar-main.scrolled { box-shadow: var(--shadow-lg); }
+        .nav-container { max-width: 1300px; margin: 0 auto; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 80px; }
+        .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-logo { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(27,94,32,0.3); }
+        .nav-brand-text h2 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; color: var(--primary-dark); margin: 0; }
+        .nav-brand-text span { font-size: 0.7rem; color: var(--text-gray); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+        .nav-menu { display: flex; align-items: center; gap: 0.3rem; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+        .nav-pill { background: rgba(27,94,32,0.1); border-radius: 20px; padding: 5px 12px; cursor: pointer; color: var(--primary-dark); transition: var(--transition); text-decoration: none; font-weight: 500; font-size: 0.8rem; border: 1px solid transparent; }
+        .nav-pill.active, .nav-pill:hover { background: var(--primary); color: white !important; border-color: var(--primary); }
+        
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; font-size: 0.8rem; text-decoration: none; transition: var(--transition); cursor: pointer; border: none; font-family: 'Inter', sans-serif; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: var(--white); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(27,94,32,0.3); color: white; }
+        .btn-accent { background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: var(--white); }
+        .btn-accent:hover { transform: translateY(-2px); color: white; }
+        .btn-sm { padding: 0.25rem 0.6rem; font-size: 0.7rem; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-outline-primary { border: 1px solid var(--primary); color: var(--primary); background: rgba(255,255,255,0.7); }
+        .btn-outline-primary:hover { background: var(--primary); color: white; }
+
+        .app-section {
+            display: none; padding-top: 80px; min-height: 100vh;
+            position: relative;
+            background: url('/images/vache.jpg') center/cover fixed;
+        }
+        .app-section::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.88);
+            z-index: 0;
+        }
+        .app-section > .container { position: relative; z-index: 1; }
+        .app-section.active { display: block; }
+
+        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('/images/vache.jpg') center/cover no-repeat; filter: brightness(0.6); transform: scale(1.1); animation: heroZoom 20s ease-in-out infinite; } 
+        @keyframes heroZoom { 0%,100% { transform: scale(1.1); } 50% { transform: scale(1.15); } }
+        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(27,94,32,0.5) 0%, rgba(13,51,17,0.4) 50%, rgba(62,39,35,0.45) 100%); } 
+        .hero-content { position: relative; z-index: 2; max-width: 1300px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+        .hero-text h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 800; color: var(--white); line-height: 1.1; margin-bottom: 1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .hero-text h1 .highlight { color: var(--accent-light); }
+        .hero-text p {@media (max-width: 968px) { 
+            .hero-content { grid-template-columns: 1fr; text-align: center; } 
+            .hero-text h1 { font-size: 1.8rem; } 
+            .hero-stats { justify-content: center; }
+            .nav-menu { gap: 0.2rem; }
+            .nav-pill { padding: 4px 8px; font-size: 0.7rem; }
+        } font-size: 0.95rem; color: rgba(255,255,255,1); margin-bottom: 1.5rem; line-height: 1.5; }
+        .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .hero-stats { display: flex; gap: 1.5rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.2); }
+        .hero-stat { text-align: center; }
+        .hero-stat-number { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--accent-light); line-height: 1; }
+        .hero-stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.9); margin-top: 0.3rem; }
+
+        #accueil-section { display: block; }
+        
+        .card { border-radius: 16px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: rgba(255,255,255,0.92); backdrop-filter: blur(5px); } 
+        .ml-card { background: rgba(245,250,247,0.92); border-left: 4px solid var(--primary); margin-bottom: 20px; } 
+        .plot-container { min-height: 260px; }
+        
+        .table-animaux { font-size: 0.7rem; background: white; border-radius: 12px; overflow-x: auto; } 
+        .table-animaux thead { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+        .table-animaux th, .table-animaux td { vertical-align: middle; padding: 6px 4px; white-space: nowrap; }
+        .badge-race { background: #f0e4c8; color: var(--brown); font-size: 0.65rem; padding: 2px 6px; border-radius: 20px; }
+        .badge-patho { background: #b7e4c7; color: var(--primary); font-size: 0.65rem; padding: 2px 6px; border-radius: 20px; }
+        .badge-sain { background: #d5f5e3; color: #27ae60; font-size: 0.65rem; padding: 2px 6px; border-radius: 20px; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+        .calendar-grid .day-header { font-weight: 700; font-size: 0.65rem; color: var(--text-gray); padding: 5px 0; }
+        .calendar-grid .day { padding: 5px 0; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.7rem; min-height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); } 
+        .calendar-grid .day.today { background: var(--primary); color: white; font-weight: 700; }
+        .calendar-grid .day.reproduction { background: #ffeaa7; border: 2px solid var(--accent); }
+        .calendar-grid .day.velage { background: #dfe6e9; border: 2px solid #74b9ff; }
+        .calendar-grid .day.best-period { background: #55efc4; border: 2px solid #00b894; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(0,184,148,0.4); } 50% { box-shadow: 0 0 0 8px rgba(0,184,148,0); } }
+        
+        .breeding-card { background: white; border-radius: var(--radius-lg); padding: 0.6rem; box-shadow: var(--shadow-md); margin-bottom: 0.6rem; border-left: 4px solid var(--accent); } 
+        .breeding-card.urgent { border-left-color: #e74c3c; background: #fff5f5; }
+        .breeding-card.upcoming { border-left-color: var(--primary); background: #f0fff4; }
+        .breeding-card.completed { border-left-color: #00b894; background: #f0fdf4; opacity: 0.8; }
+        
+        .espece-filter-btn { border-radius: 20px; padding: 3px 10px; font-size: 0.7rem; margin: 0 3px 6px 0; }
+        .espece-filter-btn.active { background: var(--primary); color: white; }
+        
+        .modal-content { border-radius: 20px; }
+        .modal-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border-radius: 20px 20px 0 0; padding: 8px 12px; }
+        .sec { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border-radius: 10px; padding: 6px 10px; margin-bottom: 15px; font-weight: 600; font-size: 0.8rem; }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border-radius: 12px; padding: 8px; font-weight: 600; width: 100%; font-size: 0.8rem; }
+        .imc-box { background: linear-gradient(135deg, #f0faf4, #f0f4ff); border-radius: 12px; padding: 8px; text-align: center; border: 2px dashed #95d5b2; }
+        .imc-val { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        
+        .result-text { background: #f0faf4; border-radius: 10px; padding: 8px; font-size: 0.75rem; margin-top: 8px; }
+        .alert-ok { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none; border-radius: 12px; padding: 8px 10px; }
+        
+        .feature-card { background: white; border-radius: var(--radius-lg); padding: 1rem; box-shadow: var(--shadow-sm); transition: var(--transition); border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(to right, var(--primary), var(--accent)); transform: scaleX(0); transition: var(--transition); }
+        .feature-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .feature-card:hover::before { transform: scaleX(1); }
+        .feature-card-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; margin-bottom: 0.6rem; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .section-container { max-width: 1300px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 1.5rem; }
+        .section-badge { display: inline-block; background: var(--gold-light); color: var(--brown); padding: 0.2rem 1rem; border-radius: 50px; font-weight: 600; font-size: 0.7rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+        .section-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.3rem; }
+        .features { padding: 2rem 1.5rem; background: var(--off-white); }
+        .cta-section { padding: 2rem 1.5rem; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); text-align: center; }
+        .cta-content { color: var(--white); }
+        .cta-content h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .footer-main { background: var(--brown); color: white; padding: 0.8rem; text-align: center; font-size: 0.7rem; }
+        
+        .hero-image-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); padding: 10px; border-radius: var(--radius-xl); } 
+        .hero-image-card img { width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-lg); display: block; }
+        .features-mini { list-style: none; padding: 10px 0 0 0; color: white; margin: 0; font-size: 0.75rem; }
+        .features-mini li { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+        .icon-box { background: rgba(255,255,255,0.2); padding: 2px 5px; border-radius: 5px; }
+        
+        .stats-overview-card { background: white; border-radius: var(--radius-lg); padding: 0.6rem; text-align: center; border-top: 3px solid var(--primary); }
+        .stats-overview-card .stats-value { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--primary-dark); }
+        .stats-overview-card .stats-label { font-size: 0.65rem; color: var(--text-gray); }
+        .stats-section-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 0.6rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--gold-light); }
+        
+        .is-invalid { border-color: #dc3545 !important; }
+        .error-message { color: #dc3545; font-size: 0.6rem; margin-top: 0.2rem; display: none; }
+        .error-message.show { display: block; }
+        
+        .generated-id {
+            font-family: monospace;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary);
+            background: #e8f5e9;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        @media (max-width: 968px) { 
+            .hero-content { grid-template-columns: 1fr; text-align: center; } 
+            .hero-text h1 { font-size: 1.8rem; } 
+            .hero-stats { justify-content: center; }
+            .nav-menu { gap: 0.2rem; }
+            .nav-pill { padding: 4px 8px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar-main" id="navbar">
+    <div class="nav-container">
+        <a href="#" class="nav-brand" onclick="showAccueil()">
+            <div class="nav-logo"><i class="bi bi-heart-pulse-fill" style="color:white;"></i></div>
+            <div class="nav-brand-text">
+                <h2>AnimTrack</h2>
+                <span>INF 232 EC2</span>
+            </div>
+        </a>
+        <ul class="nav-menu">
+            <li><a class="nav-link nav-pill active" id="nav-accueil" onclick="showAccueil()"><i class="bi bi-house-door me-1"></i>Accueil</a></li>
+            <li><a class="nav-link nav-pill" data-bs-toggle="modal" data-bs-target="#collecteModal"><i class="bi bi-clipboard-plus me-1"></i>Collecte</a></li>
+            <li><a class="nav-link nav-pill" id="nav-dashboard" onclick="showDashboard()"><i class="bi bi-bar-chart-line me-1"></i>Dashboard</a></li>
+            <li><a class="nav-link nav-pill" id="nav-calendrier" onclick="showCalendrier()"><i class="bi bi-calendar3 me-1"></i>Calendrier</a></li>
+            <li><a class="nav-link nav-pill" id="nav-gestations" onclick="showGestations()"><i class="bi bi-baby me-1"></i>Gestations</a></li>
+            <li><a class="nav-link nav-pill" id="nav-productivite" onclick="showProductivite()"><i class="bi bi-graph-up me-1"></i>Productivité</a></li>
+            <li><a class="nav-link nav-pill" id="nav-stats" onclick="showStatistiques()"><i class="bi bi-calculator me-1"></i>Stats</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- =============================================== -->
+<!-- SECTION ACCUEIL                                 -->
+<!-- =============================================== -->
+<div id="accueil-section">
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Gérez votre élevage<br><span class="highlight">avec intelligence</span></h1>
+                <p>AnimTrack - Solution complète pour la gestion moderne de elevage </p>
+                <div class="hero-cta">
+                    <a href="#" class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#collecteModal"><i class="bi bi-rocket-takeoff me-2"></i>Commencer</a>
+                    <a href="#features" class="btn btn-primary"><i class="bi bi-list-check me-2"></i>Découvrir</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat"><div class="hero-stat-number" id="stat-animaux">--</div><div class="hero-stat-label">Animaux</div></div>
+                    <div class="hero-stat"><div class="hero-stat-number" id="stat-age">--</div><div class="hero-stat-label">Âge moyen</div></div>
+                    <div class="hero-stat"><div class="hero-stat-number" id="stat-poids">--</div><div class="hero-stat-label">Poids moyen</div></div>
+                </div>
+            </div>
+            <div class="hero-image-card">
+                <img src="/images/porc.jpg" alt="Gestion porcine AnimTrack">
+                <ul class="features-mini">
+                    <li><span class="icon-box">📊</span> Analyses zootechniques</li>
+                    <li><span class="icon-box">🤖</span> Intelligence artificielle</li>
+                    <li><span class="icon-box">📱</span> Accessible partout</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+    
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-header">
+                <span class="section-badge">Fonctionnalités</span>
+                <h2 class="section-title">Tout pour votre élevage</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-card-icon"><i class="bi bi-clipboard-data"></i></div><h3>Collecte</h3><p>Enregistrez les données</p></div>
+                <div class="feature-card"><div class="feature-card-icon"><i class="bi bi-bar-chart"></i></div><h3>Analyses ML</h3><p>Régression, PCA, Clustering</p></div>
+                <div class="feature-card"><div class="feature-card-icon"><i class="bi bi-calendar-check"></i></div><h3>Reproduction</h3><p>Calendrier et gestations</p></div>
+                <div class="feature-card"><div class="feature-card-icon"><i class="bi bi-graph-up-arrow"></i></div><h3>Statistiques</h3><p>Indicateurs avancés</p></div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Prêt à optimiser votre élevage ?</h2>
+            <a href="#" class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#collecteModal"><i class="bi bi-rocket-takeoff me-2"></i>Accéder à AnimTrack</a>
+        </div>
+    </section>
+    
+    <footer class="footer-main"><p>&copy; 2024 AnimTrack &middot; INF 232 EC2</p></footer>
+</div>
+
+<!-- =============================================== -->
+<!-- MODAL MODIFICATION                              -->
+<!-- =============================================== -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-1">
+                <h5 class="modal-title" style="font-size:0.9rem;"><i class="bi bi-pencil-square me-2"></i>Modifier l'animal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editAlertBox" class="d-none mb-2"></div>
+                <form id="editFormModal" novalidate>
+                    <input type="hidden" id="editId">
+                    <div class="sec">🐄 Identification</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Identifiant</label>
+                            <input type="text" class="form-control form-control-sm" id="editIdentifiant" readonly style="background:#e8f5e9; font-weight:bold;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Âge (mois) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="editAge" required min="0" max="300" step="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Sexe <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="editSexe" required>
+                                <option value="Mâle">Mâle</option>
+                                <option value="Femelle">Femelle</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Espèce</label>
+                            <input type="text" class="form-control form-control-sm" id="editEspece" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="editTypeAnimal" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Race <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="editRace" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Dernière reproduction</label>
+                            <input type="date" class="form-control form-control-sm" id="editDerniereRepro">
+                        </div>
+                    </div>
+                    <div class="sec">📏 Paramètres</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Poids (kg) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="editPoids" step="0.1" required min="0.1" max="2000">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Hauteur (cm) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="editTaille" step="0.1" required min="10" max="250">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="imc-box p-1">
+                                <div class="imc-val" id="editImcVal" style="font-size:1.1rem;">--</div>
+                                <div id="editImcCat" style="font-size:.6rem;">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sec">🥛 Production</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4"><label class="form-label" style="font-size:0.7rem;">Lait (L/j)</label><input type="number" class="form-control form-control-sm" id="editLait" step="0.1" min="0" max="100"></div>
+                        <div class="col-4"><label class="form-label" style="font-size:0.7rem;">Conso (kg/j)</label><input type="number" class="form-control form-control-sm" id="editConso" step="0.1" min="0" max="50"></div>
+                        <div class="col-4"><label class="form-label" style="font-size:0.7rem;">GMQ (g/j)</label><input type="number" class="form-control form-control-sm" id="editGMQ" step="0.1" min="0" max="2000"></div>
+                    </div>
+                    <div class="sec">🏥 Santé</div>
+                    <div class="mb-2">
+                        <textarea class="form-control form-control-sm" id="editPathologies" rows="2" style="font-size:0.7rem;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-submit btn-sm">💾 Enregistrer les modifications</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =============================================== -->
+<!-- SECTION DASHBOARD                              -->
+<!-- =============================================== -->
+<div id="section-dashboard" class="app-section">
+    <div class="container py-3">
+        <h2 class="fw-bold mb-3" style="color:#1B5E20; font-size:1.2rem;"><i class="bi bi-speedometer2 me-2"></i>Tableau de bord</h2>
+        <div class="row mb-3" id="summary-cards"></div>
+        
+        <div class="card p-2 mb-3"><h6 class="fw-bold">🔗 Matrice de corrélation</h6><div id="heatmapCorr" class="plot-container"></div></div>
+        
+        <div class="card p-2 mb-3"><div class="d-flex justify-content-between align-items-center flex-wrap"><h6 class="fw-bold">📈 Diagramme de dispersion</h6><div class="d-flex gap-2"><select id="xVar" class="form-select form-select-sm w-auto" style="font-size:0.7rem; width:100px;"></select><span style="font-size:0.7rem;">vs</span><select id="yVar" class="form-select form-select-sm w-auto" style="font-size:0.7rem; width:100px;"></select><button class="btn btn-sm btn-primary" onclick="updateScatter()" style="font-size:0.65rem;">MAJ</button></div></div><div id="scatterPlot" class="plot-container"></div></div>
+        
+        <div class="card p-2 mb-3"><h6 class="fw-bold">📦 Diagrammes en boîte</h6><div id="boxPlot" class="plot-container"></div></div>
+        
+        <div class="card p-2 mb-3 ml-card"><h6 class="fw-bold">📉 1. Régression linéaire simple</h6><div class="row"><div class="col-5"><select id="lrX" class="form-select form-select-sm"></select></div><div class="col-2 text-center">vs</div><div class="col-5"><select id="lrY" class="form-select form-select-sm"></select></div><div class="col-12 mt-2"><button class="btn btn-primary btn-sm w-100" onclick="computeLinearRegression()">Calculer</button></div></div><div id="lrResult" class="result-text mt-2"></div><div id="lrPlot" style="height:250px;" class="mt-2"></div></div>
+        
+        <div class="card p-2 mb-3 ml-card"><h6 class="fw-bold">🔀 2. Régression linéaire multiple</h6><div class="row"><div class="col-12"><select id="mlY" class="form-select form-select-sm"></select></div><div class="col-12 mt-2"><label class="form-label" style="font-size:0.65rem;">X (Ctrl+Click)</label><select id="mlX" class="form-select form-select-sm" multiple size="2"></select></div><div class="col-12 mt-2"><button class="btn btn-primary btn-sm w-100" onclick="computeMultipleRegression()">Exécuter</button></div></div><div id="mlResult" class="result-text mt-2"></div></div>
+        
+        <div class="card p-2 mb-3 ml-card"><h6 class="fw-bold">🔬 3. ACP</h6><button class="btn btn-outline-primary btn-sm mb-2" onclick="runPCA()">⟳ Calculer l'ACP</button><div id="pcaResult" class="result-text"></div><div id="pcaPlot" style="height:300px;"></div></div>
+        
+        <div class="card p-2 mb-3 ml-card"><h6 class="fw-bold">🎯 4. Classification</h6><button class="btn btn-outline-primary btn-sm mb-2" onclick="runSupervisedClassification()">⚙️ Entraîner</button><div id="supResult" class="result-text"></div></div>
+        
+        <div class="card p-2 mb-3 ml-card"><h6 class="fw-bold">🧩 5. K-means</h6><div class="row"><div class="col-6"><label class="form-label" style="font-size:0.65rem;">K</label><input type="number" id="kValue" class="form-control form-control-sm" value="3" min="2" max="6"></div><div class="col-6"><button class="btn btn-primary btn-sm mt-3 w-100" onclick="runKMeans()">Exécuter</button></div></div><div id="kmeansResult" class="result-text mt-2"></div><div id="kmeansPlot" style="height:300px;"></div></div>
+        
+        <div class="card p-2"><h6 class="fw-bold mb-2">🐄 Animaux enregistrés</h6><input type="text" id="animalSearch" class="form-control form-control-sm mb-2" placeholder="Rechercher par identifiant..." style="font-size:0.7rem;" oninput="filterAnimaux()"><div id="animalTableContainer"></div></div>
+    </div>
+</div>
+
+<!-- =============================================== -->
+<!-- SECTION CALENDRIER REPRODUCTION                -->
+<!-- =============================================== -->
+<div id="section-calendrier" class="app-section">
+    <div class="container py-3">
+        <h2 class="fw-bold mb-2 text-center" style="color:#1B5E20; font-size:1.2rem;">Calendrier de Reproduction</h2>
+        <div class="text-center mb-2">
+            <button class="btn btn-sm espece-filter-btn active" onclick="filterByEspece('tous')">Tous</button>
+            <button class="btn btn-sm espece-filter-btn btn-outline-primary" onclick="filterByEspece('Bovin')">🐄 Bovins</button>
+            <button class="btn btn-sm espece-filter-btn btn-outline-primary" onclick="filterByEspece('Ovin')">🐑 Ovins</button>
+            <button class="btn btn-sm espece-filter-btn btn-outline-primary" onclick="filterByEspece('Caprin')">🐐 Caprins</button>
+            <button class="btn btn-sm espece-filter-btn btn-outline-primary" onclick="filterByEspece('Porcin')">🐷 Porcins</button>
+            <button class="btn btn-sm espece-filter-btn btn-outline-primary" onclick="filterByEspece('Volaille')">🐔 Volaille</button>
+        </div>
+        <div class="row">
+            <div class="col-lg-8"><div class="card p-2"><div class="d-flex justify-content-between mb-2"><button class="btn btn-sm btn-outline-primary" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button><h5 class="mb-0" id="currentMonthYear" style="font-size:0.9rem;"></h5><button class="btn btn-sm btn-outline-primary" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button></div><div id="calendarContainer"></div></div></div>
+            <div class="col-lg-4"><h6 class="fw-bold mb-2">📋 Planification</h6><div id="breedingList"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- =============================================== -->
+<!-- SECTION GESTATIONS                             -->
+<!-- =============================================== -->
+<div id="section-gestations" class="app-section">
+    <div class="container py-3">
+        <h2 class="fw-bold mb-2 text-center" style="color:#1B5E20; font-size:1.2rem;"><i class="bi bi-baby me-2"></i>Suivi des Gestations</h2>
+        
+        <div class="row mb-2">
+            <div class="col-md-6 mx-auto">
+                <label class="form-label fw-bold" style="font-size:0.7rem;">🐄 Filtrer par espèce</label>
+                <select id="gestationEspeceFilter" class="form-select form-select-sm" onchange="loadGestations()" style="font-size:0.7rem;">
+                    <option value="tous">Toutes les espèces</option>
+                    <option value="Bovin">🐄 Bovins</option>
+                    <option value="Caprin">🐐 Caprins</option>
+                    <option value="Ovin">🐑 Ovins</option>
+                    <option value="Porcin">🐷 Porcins</option>
+                    <option value="Volaille">🐔 Volaille</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row mb-2" id="gestation-cards"></div>
+        
+        <div class="card p-2">
+            <h6 class="stats-section-title mb-2"><i class="bi bi-list-check me-2"></i>Femelles en gestation</h6>
+            <div id="gestation-list" class="row"></div>
+        </div>
+    </div>
+</div>
+
+<!-- =============================================== -->
+<!-- SECTION PRODUCTIVITE                           -->
+<!-- =============================================== -->
+<div id="section-productivite" class="app-section">
+    <div class="container py-3">
+        <h2 class="fw-bold mb-2 text-center" style="color:#1B5E20; font-size:1.2rem;"><i class="bi bi-graph-up me-2"></i>Calendrier de Productivité</h2>
+        
+        <div class="row mb-2">
+            <div class="col-4"><label class="form-label fw-bold" style="font-size:0.65rem;">📅 Année</label><select id="productiviteYear" class="form-select form-select-sm" onchange="loadProductiviteCalendrier()" style="font-size:0.7rem;"><option value="2024" selected>2024</option><option value="2025">2025</option></select></div>
+            <div class="col-4"><label class="form-label fw-bold" style="font-size:0.65rem;">🐄 Type</label><select id="productiviteType" class="form-select form-select-sm" onchange="loadProductiviteCalendrier()" style="font-size:0.7rem;"><option value="lait">🥛 Lait (L)</option><option value="oeufs">🥚 Œufs</option><option value="viande">🥩 Viande (kg)</option></select></div>
+            <div class="col-4"><label class="form-label fw-bold" style="font-size:0.65rem;">📊 Mode</label><select id="productiviteMode" class="form-select form-select-sm" onchange="loadProductiviteCalendrier()" style="font-size:0.7rem;"><option value="mois">Par mois</option><option value="trimestre">Par trimestre</option></select></div>
+        </div>
+        
+        <div class="row mb-2" id="productivite-cards"></div>
+        <div class="card p-2 mb-2"><h6 class="stats-section-title mb-2">Évolution de la production</h6><div id="productiviteChart" style="height: 280px;"></div></div>
+        <div class="card p-2"><h6 class="stats-section-title mb-2">Détail des rendements</h6><div class="table-responsive" id="productiviteTable"></div></div>
+    </div>
+</div>
+
+<!-- =============================================== -->
+<!-- SECTION STATISTIQUES                           -->
+<!-- =============================================== -->
+<div id="section-statistiques" class="app-section">
+    <div class="container py-3">
+        <div class="text-center mb-2"><h2 class="section-title" style="font-size:1.3rem;">Statistiques &amp; Conseils</h2></div>
+        <div class="row g-2 mb-2" id="stats-overview"></div>
+        <div class="card p-2 mb-2"><h6 class="stats-section-title">Descriptif</h6><div id="stats-table-container">Chargement...</div></div>
+        <div class="row g-2 mb-2"><div class="col-lg-6"><div class="card p-2"><h6 class="stats-section-title">Âges</h6><div id="histAge" style="height:240px;"></div></div></div><div class="col-lg-6"><div class="card p-2"><h6 class="stats-section-title">Poids</h6><div id="histPoids" style="height:240px;"></div></div></div></div>
+        <div class="card p-2 mb-2"><h6 class="stats-section-title">Conseils</h6><div id="conseils-productivite"></div></div>
+        <div class="card p-2"><h6 class="stats-section-title">Rapport</h6><div id="stats-insights"></div><div class="text-center mt-2"><a href="/api/export/csv" class="btn btn-success btn-sm">📥 Exporter CSV</a></div></div>
+    </div>
+</div>
+
+<!-- =============================================== -->
+<!-- MODAL COLLECTE                                 -->
+<!-- =============================================== -->
+<div class="modal fade" id="collecteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-1">
+                <h5 class="modal-title" style="font-size:0.9rem;">Formulaire d'enregistrement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="alertBoxModal" class="d-none mb-2"></div>
+                <form id="elevageFormModal" novalidate>
+                    <div class="sec">🐄 Identification</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Identifiant</label>
+                            <div class="generated-id" id="identifiantPreview" style="font-size:0.8rem;">B001</div>
+                            <small class="text-muted" style="font-size:0.6rem;">Généré automatiquement</small>
+                            <input type="hidden" id="identifiantGenere">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Âge (mois) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="ageModal" required min="0" max="300" step="1" style="font-size:0.7rem;">
+                            <div class="error-message" id="ageError">Âge entre 0 et 300 mois</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Sexe <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="sexeModal" required style="font-size:0.7rem;">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="Mâle">Mâle</option>
+                                <option value="Femelle">Femelle</option>
+                            </select>
+                            <div class="error-message" id="sexeError">Sélectionnez un sexe</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Espèce <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" id="especeModal" required style="font-size:0.7rem;" onchange="updateIdentifiantPreview()">
+                                <option value="">-- Sélectionner --</option>
+                                <option value="Bovin">🐄 Bovin</option>
+                                <option value="Ovin">🐑 Ovin</option>
+                                <option value="Caprin">🐐 Caprin</option>
+                                <option value="Porcin">🐷 Porcin</option>
+                                <option value="Volaille">🐔 Volaille</option>
+                            </select>
+                            <div class="error-message" id="especeError">Sélectionnez une espèce</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Type <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="typeAnimalModal" required placeholder="Ex: Vache laitière, Brebis, Chèvre, Poule..." style="font-size:0.7rem;">
+                            <div class="error-message" id="typeAnimalError">Le type est requis</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Race <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="raceModal" required placeholder="Ex: Prim'Holstein, Limousine..." style="font-size:0.7rem;">
+                            <div class="error-message" id="raceError">La race est requise</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:0.7rem;">Dernière reproduction</label>
+                            <input type="date" class="form-control form-control-sm" id="derniereReproModal" style="font-size:0.7rem;">
+                            <small class="text-muted" style="font-size:0.6rem;">Pour les femelles</small>
+                        </div>
+                    </div>
+                    
+                    <div class="sec">📏 Paramètres</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Poids (kg) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="poidsModal" step="0.1" required min="0.1" max="2000" style="font-size:0.7rem;">
+                            <div class="error-message" id="poidsError">Poids entre 0.1 et 2000 kg</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-size:0.7rem;">Hauteur (cm) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control form-control-sm" id="tailleModal" step="0.1" required min="10" max="250" style="font-size:0.7rem;">
+                            <div class="error-message" id="tailleError">Hauteur entre 10 et 250 cm</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="imc-box p-1">
+                                <div class="imc-val" id="imcValModal" style="font-size:1.1rem;">--</div>
+                                <div id="imcCatModal" style="font-size:.6rem;">Entrez poids/hauteur</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sec">🥛 Production</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4"><label class="form-label" style="font-size:0.7rem;">Lait (L/j)</label><input type="number" class="form-control form-control-sm" id="laitModal" step="0.1" min="0" max="100" style="font-size:0.7rem;"></div>
+                        <div class="col-4"><label class="form-label" style="font-size:0.7rem;">Conso (kg/j)</label><input type="number" class="form-control form-control-sm" id="consoModal" step="0.1" min="0" max="50" style="font-size:0.7rem;"></div>
+                        <div class="col-4"><label class="form-label" style="font-size:0.7rem;">GMQ (g/j)</label><input type="number" class="form-control form-control-sm" id="gmqModal" step="0.1" min="0" max="2000" style="font-size:0.7rem;"></div>
+                    </div>
+                    
+                    <div class="sec">🏥 Santé</div>
+                    <div class="mb-2">
+                        <textarea class="form-control form-control-sm" id="maladieModal" rows="2" placeholder="Pathologies (optionnel)" style="font-size:0.7rem;"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-submit btn-sm">💾 Enregistrer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ================================================
+// VARIABLES GLOBALES
+// ================================================
+let allAnimaux = [];
+let dashboardLoaded = false, statistiquesLoaded = false, calendrierLoaded = false;
+let currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear(), currentEspeceFilter = 'tous';
+
+const GESTATION = { 'Bovin': 280, 'Ovin': 150, 'Caprin': 150, 'Porcin': 114, 'Volaille': 21 };
+const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const CODE_ESPECE = { 'Bovin': 'B', 'Ovin': 'O', 'Caprin': 'C', 'Porcin': 'P', 'Volaille': 'V' };
+const numericVars = ['age','poids','taille','imc','production_lait','conso_aliment','gmq'];
+const varLabels = { age:'Âge (mois)', poids:'Poids (kg)', taille:'Hauteur (cm)', imc:'IMC', production_lait:'Lait (L/j)', conso_aliment:'Conso (kg/j)', gmq:'GMQ (g/j)' };
+
+// ================================================
+// FONCTIONS IDENTIFIANTS
+// ================================================
+function generateIdentifiant(espece) {
+    const code = CODE_ESPECE[espece] || 'X';
+    const existingIds = allAnimaux.filter(a => a.identifiant && a.identifiant.startsWith(code)).length;
+    const nextNum = existingIds + 1;
+    return `${code}${nextNum.toString().padStart(3, '0')}`;
+}
+
+function updateIdentifiantPreview() {
+    const espece = document.getElementById('especeModal').value;
+    if (espece && CODE_ESPECE[espece]) {
+        const newId = generateIdentifiant(espece);
+        document.getElementById('identifiantPreview').textContent = newId;
+        document.getElementById('identifiantGenere').value = newId;
+    } else {
+        document.getElementById('identifiantPreview').textContent = '---';
+    }
+}
+
+// ================================================
+// VALIDATION FORMULAIRE
+// ================================================
+document.getElementById('poidsModal').addEventListener('input', calcImcModal);
+document.getElementById('tailleModal').addEventListener('input', calcImcModal);
+document.getElementById('especeModal').addEventListener('change', updateIdentifiantPreview);
+
+function calcImcModal() {
+    const p = parseFloat(document.getElementById('poidsModal').value);
+    const t = parseFloat(document.getElementById('tailleModal').value);
+    if (p && t && !isNaN(p) && !isNaN(t) && t > 0) {
+        const imc = p / Math.pow(t / 100, 2);
+        document.getElementById('imcValModal').textContent = imc.toFixed(1);
+        let cat = '';
+        if (imc < 150) cat = '⚠️ Maigre';
+        else if (imc < 250) cat = '✅ Normal';
+        else if (imc < 350) cat = '⚠️ Corpulent';
+        else cat = '🔴 Obèse';
+        document.getElementById('imcCatModal').textContent = cat;
+    } else {
+        document.getElementById('imcValModal').textContent = '--';
+        document.getElementById('imcCatModal').textContent = 'Entrez poids/hauteur';
+    }
+}
+
+function validateForm() {
+    let isValid = true;
+    const fields = ['ageModal', 'sexeModal', 'especeModal', 'typeAnimalModal', 'raceModal', 'poidsModal', 'tailleModal'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el.value || (el.type === 'number' && parseFloat(el.value) <= 0)) {
+            el.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            el.classList.remove('is-invalid');
+        }
+    });
+    return isValid;
+}
+
+// ================================================
+// NAVIGATION
+// ================================================
+window.addEventListener('scroll', () => { const n = document.getElementById('navbar'); if (window.scrollY > 50) n.classList.add('scrolled'); else n.classList.remove('scrolled'); });
+function hideAllSections() { document.getElementById('accueil-section').style.display = 'none'; document.querySelectorAll('.app-section').forEach(e => e.classList.remove('active')); }
+function updateNavPills(id) { document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active')); const el = document.getElementById(id); if (el) el.classList.add('active'); }
+function showAccueil() { hideAllSections(); document.getElementById('accueil-section').style.display = 'block'; updateNavPills('nav-accueil'); window.scrollTo({ top: 0 }); }
+function showDashboard() { hideAllSections(); document.getElementById('section-dashboard').classList.add('active'); updateNavPills('nav-dashboard'); if (!dashboardLoaded) { loadDashboard(); dashboardLoaded = true; } }
+function showCalendrier() { hideAllSections(); document.getElementById('section-calendrier').classList.add('active'); updateNavPills('nav-calendrier'); if (!calendrierLoaded) { loadCalendrier(); calendrierLoaded = true; } }
+function showGestations() { hideAllSections(); document.getElementById('section-gestations').classList.add('active'); updateNavPills('nav-gestations'); loadGestations(); }
+function showProductivite() { hideAllSections(); document.getElementById('section-productivite').classList.add('active'); updateNavPills('nav-productivite'); loadProductiviteCalendrier(); }
+function showStatistiques() { hideAllSections(); document.getElementById('section-statistiques').classList.add('active'); updateNavPills('nav-stats'); if (!statistiquesLoaded) { loadStatistiques(); statistiquesLoaded = true; } }
+
+// ================================================
+// FORMULAIRE SUBMIT
+// ================================================
+document.getElementById('elevageFormModal').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+        const ab = document.getElementById('alertBoxModal');
+        ab.classList.remove('d-none');
+        ab.className = 'alert alert-danger mb-2 p-1';
+        ab.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Corrigez les champs en rouge';
+        setTimeout(() => ab.classList.add('d-none'), 2000);
+        return;
+    }
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Enreg...';
+    
+    const identifiant = document.getElementById('identifiantGenere').value || generateIdentifiant(document.getElementById('especeModal').value);
+    
+    const data = {
+        identifiant: identifiant,
+        age: document.getElementById('ageModal').value,
+        sexe: document.getElementById('sexeModal').value,
+        espece: document.getElementById('especeModal').value,
+        type_animal: document.getElementById('typeAnimalModal').value,
+        race: document.getElementById('raceModal').value,
+        poids: document.getElementById('poidsModal').value,
+        taille: document.getElementById('tailleModal').value,
+        production_lait: document.getElementById('laitModal').value || 0,
+        conso_aliment: document.getElementById('consoModal').value || 0,
+        gmq: document.getElementById('gmqModal').value || 0,
+        pathologies: document.getElementById('maladieModal').value || 'Aucune',
+        derniere_reproduction: document.getElementById('derniereReproModal').value || null
+    };
+    
+    try {
+        const r = await fetch('/api/animaux', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const ab = document.getElementById('alertBoxModal');
+        ab.classList.remove('d-none');
+        if (r.ok) {
+            const result = await r.json();
+            ab.className = 'alert-ok mb-2 p-1';
+            ab.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Enregistré ! ID: ${result.identifiant}`;
+            document.getElementById('elevageFormModal').reset();
+            document.getElementById('imcValModal').textContent = '--';
+            updateIdentifiantPreview();
+            loadHeroStats();
+            if (dashboardLoaded) loadDashboard();
+            if (calendrierLoaded) loadCalendrier();
+            if (statistiquesLoaded) loadStatistiques();
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('collecteModal'));
+                if (modal) modal.hide();
+                ab.classList.add('d-none');
+            }, 1200);
+        } else {
+            const err = await r.json();
+            ab.className = 'alert alert-danger mb-2 p-1';
+            ab.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${err.error}`;
+        }
+    } catch {
+        document.getElementById('alertBoxModal').innerHTML = '<div class="alert alert-danger">Erreur de connexion</div>';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '💾 Enregistrer';
+});
+
+// ================================================
+// DASHBOARD - AVEC TRI PAR ID
+// ================================================
+async function loadHeroStats() { try { const r = await fetch('/api/stats/descriptives'); const s = await r.json(); if (s.total) { document.getElementById('stat-animaux').textContent = s.total; document.getElementById('stat-age').textContent = (s.age?.moyenne || '--') + ' mois'; document.getElementById('stat-poids').textContent = (s.poids?.moyenne || '--') + ' kg'; } } catch(e){} }
+async function loadDashboard() { try { const r = await fetch('/api/animaux'); allAnimaux = await r.json(); allAnimaux.sort((a,b) => a.id - b.id); } catch(e){} renderSummary(); populateSelects(); loadCorrelationMatrix(); loadBoxPlots(); updateScatter(); renderAnimalList(); populateMLSelects(); updateIdentifiantPreview(); }
+function renderSummary() { const t = allAnimaux.length, a = allAnimaux.map(p=>p.age).filter(x=>x), ag = a.length ? (a.reduce((x,y)=>x+y,0)/a.length).toFixed(1) : '--', p = allAnimaux.map(p=>p.poids).filter(x=>x), po = p.length ? (p.reduce((x,y)=>x+y,0)/p.length).toFixed(1) : '--'; document.getElementById('summary-cards').innerHTML = `<div class="col-3"><div class="card p-1 text-center"><small>Total</small><h4 class="mb-0">${t}</h4></div></div><div class="col-3"><div class="card p-1 text-center"><small>Âge moyen</small><h4 class="mb-0">${ag}</h4></div></div><div class="col-3"><div class="card p-1 text-center"><small>Poids moyen</small><h4 class="mb-0">${po}</h4></div></div><div class="col-3"><div class="card p-1 text-center"><small>Données</small><h4 class="mb-0">${t?'✅':'⚠️'}</h4></div></div>`; }
+function populateSelects() { const xs=document.getElementById('xVar'), ys=document.getElementById('yVar'); if(!xs) return; xs.innerHTML=ys.innerHTML=''; numericVars.forEach(v=>{const o=document.createElement('option'); o.value=v; o.textContent=varLabels[v]; xs.appendChild(o.cloneNode(true)); ys.appendChild(o);}); xs.value='age'; ys.value='poids'; }
+function populateMLSelects() { const lx=document.getElementById('lrX'), ly=document.getElementById('lrY'), my=document.getElementById('mlY'), mx=document.getElementById('mlX'); if(!lx) return; lx.innerHTML=ly.innerHTML=my.innerHTML=mx.innerHTML=''; numericVars.forEach(v=>{const o=document.createElement('option'); o.value=v; o.textContent=varLabels[v]; lx.appendChild(o.cloneNode(true)); ly.appendChild(o.cloneNode(true)); my.appendChild(o.cloneNode(true)); mx.appendChild(o.cloneNode(true));}); lx.value='age'; ly.value='poids'; my.value='poids'; }
+async function loadCorrelationMatrix() { try { const r=await fetch('/api/correlation'); const d=await r.json(); if(d.error){document.getElementById('heatmapCorr').innerHTML=`<p class="text-muted">${d.error}</p>`;return;} const vars=d.variables, mat=d.matrix, labels=vars.map(v=>varLabels[v]||v); Plotly.newPlot('heatmapCorr',[{z:mat,x:labels,y:labels,type:'heatmap',colorscale:'RdBu',zmin:-1,zmax:1}],{height:260,margin:{l:80,t:20}}); } catch(e){} }
+function loadBoxPlots() { const traces=[]; numericVars.forEach(v=>{const vals=allAnimaux.map(p=>p[v]).filter(x=>x&&x!==0); if(vals.length) traces.push({y:vals,name:varLabels[v],type:'box',boxmean:'sd'});}); if(traces.length) Plotly.newPlot('boxPlot',traces,{height:260,showlegend:false}); else document.getElementById('boxPlot').innerHTML='<p class="text-muted text-center py-3">Pas assez de données</p>'; }
+window.updateScatter = function(){ const xv=document.getElementById('xVar').value, yv=document.getElementById('yVar').value, xv2=[], yv2=[], txt=[]; allAnimaux.forEach(p=>{const x=p[xv],y=p[yv]; if(x&&y&&!isNaN(x)&&!isNaN(y)){xv2.push(x);yv2.push(y);txt.push(`ID: ${p.identifiant}`);}}); if(xv2.length) Plotly.newPlot('scatterPlot',[{x:xv2,y:yv2,mode:'markers',type:'scatter',marker:{size:6},text:txt}],{height:260}); else document.getElementById('scatterPlot').innerHTML='<p class="text-muted text-center py-3">Pas assez de données</p>'; };
+
+// ================================================
+// RENDER ANIMAL LIST - AVEC BOUTONS MODIFIER ET SUPPRIMER
+// ================================================
+async function editAnimal(id) {
+    const animal = allAnimaux.find(a => a.id === id);
+    if (!animal) return;
+    
+    document.getElementById('editId').value = animal.id;
+    document.getElementById('editIdentifiant').value = animal.identifiant || '';
+    document.getElementById('editAge').value = animal.age || '';
+    document.getElementById('editSexe').value = animal.sexe || 'Femelle';
+    document.getElementById('editEspece').value = animal.espece || '';
+    document.getElementById('editTypeAnimal').value = animal.type_animal || '';
+    document.getElementById('editRace').value = animal.race || '';
+    document.getElementById('editDerniereRepro').value = animal.derniere_reproduction || '';
+    document.getElementById('editPoids').value = animal.poids || '';
+    document.getElementById('editTaille').value = animal.taille || '';
+    document.getElementById('editLait').value = animal.production_lait || 0;
+    document.getElementById('editConso').value = animal.conso_aliment || 0;
+    document.getElementById('editGMQ').value = animal.gmq || 0;
+    document.getElementById('editPathologies').value = (animal.pathologies !== 'Aucune') ? animal.pathologies : '';
+    
+    // Calcul IMC
+    const p = parseFloat(animal.poids);
+    const t = parseFloat(animal.taille);
+    if (p && t && t > 0) {
+        const imc = p / Math.pow(t / 100, 2);
+        document.getElementById('editImcVal').textContent = imc.toFixed(1);
+        let cat = '';
+        if (imc < 150) cat = '⚠️ Maigre';
+        else if (imc < 250) cat = '✅ Normal';
+        else if (imc < 350) cat = '⚠️ Corpulent';
+        else cat = '🔴 Obèse';
+        document.getElementById('editImcCat').textContent = cat;
+    } else {
+        document.getElementById('editImcVal').textContent = '--';
+        document.getElementById('editImcCat').textContent = '--';
+    }
+    
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+
+document.getElementById('editFormModal').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const data = {
+        age: document.getElementById('editAge').value,
+        sexe: document.getElementById('editSexe').value,
+        type_animal: document.getElementById('editTypeAnimal').value,
+        race: document.getElementById('editRace').value,
+        poids: document.getElementById('editPoids').value,
+        taille: document.getElementById('editTaille').value,
+        production_lait: document.getElementById('editLait').value || 0,
+        conso_aliment: document.getElementById('editConso').value || 0,
+        gmq: document.getElementById('editGMQ').value || 0,
+        pathologies: document.getElementById('editPathologies').value || 'Aucune',
+        derniere_reproduction: document.getElementById('editDerniereRepro').value || null
+    };
+    
+    try {
+        const response = await fetch(`/api/animaux/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+            await loadDashboard();
+            await loadCalendrier();
+            await loadGestations();
+            await loadStatistiques();
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success position-fixed top-0 end-0 m-3 shadow';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Animal modifié avec succès !`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        } else {
+            alert('Erreur lors de la modification');
+        }
+    } catch (error) {
+        alert('Erreur de connexion');
+    }
+});
+
+async function deleteAnimal(id, identifiant) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'animal ${identifiant} (ID: ${id}) ?\nCette action est irréversible.`)) return;
+    try {
+        const response = await fetch(`/api/animaux/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+        if (response.ok) {
+            await loadDashboard();
+            await loadCalendrier();
+            await loadGestations();
+            await loadStatistiques();
+            await loadHeroStats();
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success position-fixed top-0 end-0 m-3 shadow';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Animal ${identifiant} supprimé !`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        } else {
+            const error = await response.json();
+            alert(`Erreur: ${error.error}`);
+        }
+    } catch (error) {
+        alert('Erreur de connexion');
+    }
+}
+
+function renderAnimalList() {
+    const container = document.getElementById('animalTableContainer');
+    if (!allAnimaux.length) {
+        container.innerHTML = '<p class="text-muted text-center py-2">Aucun animal enregistré</p>';
+        return;
+    }
+    let html = `<div class="table-responsive"><table class="table table-hover table-animaux" id="animauxTable"><thead>
+        <tr><th>ID</th><th>Identifiant</th><th>Âge</th><th>Sexe</th><th>Poids(kg)</th><th>IMC</th><th>Type</th><th>Race</th><th>Espèce</th><th>Lait(L/j)</th><th>GMQ(g/j)</th><th>Pathologies</th><th style="width:100px">Actions</th></tr></thead><tbody>`;
+    for (let a of allAnimaux) {
+        let type = a.type_animal || '—';
+        let lait = a.production_lait ? `${a.production_lait}` : '—';
+        let gmq = a.gmq ? `${a.gmq}` : '—';
+        let imc = a.imc ? a.imc : '—';
+        let patho = (a.pathologies && a.pathologies !== 'Aucune') ? `<span class="badge-patho">${a.pathologies}</span>` : '<span class="badge-sain">✅ Sain</span>';
+        html += `<tr>
+            <td class="text-center">${a.id}</td>
+            <td><strong>${a.identifiant||'---'}</strong></td>
+            <td class="text-center">${a.age||'--'}</td>
+            <td class="text-center">${a.sexe||'--'}</td>
+            <td class="text-end">${a.poids||'--'}</td>
+            <td class="text-end">${imc}</td>
+            <td>${type}</td>
+            <td><span class="badge-race">${a.race||'--'}</span></td>
+            <td><span class="badge bg-secondary">${a.espece||'--'}</span></td>
+            <td class="text-end">${lait}</td>
+            <td class="text-end">${gmq}</td>
+            <td>${patho}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-warning me-1" onclick="editAnimal(${a.id})" title="Modifier"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteAnimal(${a.id}, '${a.identifiant}')" title="Supprimer"><i class="bi bi-trash3"></i></button>
+            </td>
+        </tr>`;
+    }
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+}
+
+window.filterAnimaux = function(){ const f=document.getElementById('animalSearch').value.toUpperCase(); const rows=document.querySelectorAll('#animauxTable tbody tr'); rows.forEach(r=>{const id=(r.cells[1]?.textContent||'').toUpperCase(); r.style.display=id.includes(f)?'':'none';}); };
+
+// ================================================
+// CALENDRIER
+// ================================================
+function filterByEspece(e) { currentEspeceFilter = e; document.querySelectorAll('.espece-filter-btn').forEach(b=>b.classList.remove('active')); document.querySelector(`[onclick="filterByEspece('${e}')"]`).classList.add('active'); loadCalendrier(); }
+function changeMonth(d) { currentMonth += d; if (currentMonth > 11) { currentMonth = 0; currentYear++; } if (currentMonth < 0) { currentMonth = 11; currentYear--; } loadCalendrier(); }
+function loadCalendrier() {
+    document.getElementById('currentMonthYear').textContent = MOIS_FR[currentMonth] + ' ' + currentYear;
+    const fd = new Date(currentYear, currentMonth, 1).getDay(), dim = new Date(currentYear, currentMonth + 1, 0).getDate(), today = new Date(), adj = fd === 0 ? 6 : fd - 1;
+    let h = '<div class="calendar-grid">'; ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(d=>h+=`<div class="day-header">${d}</div>`);
+    for(let i=0;i<adj;i++) h+='<div class="day"></div>';
+    for(let d=1;d<=dim;d++){ const dt=new Date(currentYear,currentMonth,d); let cl=['day']; if(dt.toDateString()===today.toDateString()) cl.push('today');
+        const filtre = currentEspeceFilter==='tous'?allAnimaux:allAnimaux.filter(a=>a.espece===currentEspeceFilter);
+        filtre.forEach(a=>{ if(a.sexe==='Femelle' && a.derniere_reproduction){
+            const lr=new Date(a.derniere_reproduction), nv=new Date(lr); nv.setDate(nv.getDate()+(GESTATION[a.espece]||280));
+            if(dt.toDateString()===nv.toDateString()) cl.push('velage');
+            const nr=new Date(lr); nr.setDate(nr.getDate()+365);
+            const rs=new Date(nr); rs.setDate(rs.getDate()-7); const re=new Date(nr); re.setDate(re.getDate()+7);
+            if(dt>=rs&&dt<=re){ if(dt.toDateString()===nr.toDateString()) cl.push('best-period'); else cl.push('reproduction'); }
+        }});
+        h+=`<div class="${cl.join(' ')}">${d}</div>`;
+    } h+='</div>'; document.getElementById('calendarContainer').innerHTML = h;
+    const femelles = allAnimaux.filter(a=>a.sexe==='Femelle');
+    const filtrees = currentEspeceFilter==='tous'?femelles:femelles.filter(a=>a.espece===currentEspeceFilter);
+    let bl=''; filtrees.forEach(a=>{ const icon=a.espece==='Bovin'?'🐄':a.espece==='Caprin'?'🐐':a.espece==='Ovin'?'🐑':a.espece==='Porcin'?'🐷':'🐔';
+        let cc='breeding-card', st='Première repro', sb='info';
+        if(a.derniere_reproduction){ const nr=new Date(a.derniere_reproduction); nr.setDate(nr.getDate()+365);
+            const du=Math.ceil((nr-new Date())/(86400000));
+            if(du<=0){ cc='breeding-card urgent'; st='URGENT - À reproduire'; sb='danger'; }
+            else if(du<=30){ cc='breeding-card upcoming'; st=`À planifier (dans ${du} j)`; sb='warning'; }
+            else{ cc='breeding-card completed'; st=`Repos (dans ${du} j)`; sb='success'; }
+        }
+        bl+=`<div class="${cc} p-1 mb-1"><div class="d-flex justify-content-between align-items-center"><div><small><strong>${icon} ${a.identifiant}</strong></small><br><small style="font-size:0.65rem;">${a.type_animal||a.espece} - ${a.race}</small></div><div class="text-end"><span class="badge bg-${sb}" style="font-size:0.6rem;">${st}</span><button class="btn btn-sm btn-danger p-0 px-1 ms-1" onclick="deleteAnimal(${a.id}, '${a.identifiant}')" style="font-size:0.6rem;" title="Supprimer"><i class="bi bi-trash3"></i></button><button class="btn btn-sm btn-warning p-0 px-1 ms-1" onclick="editAnimal(${a.id})" style="font-size:0.6rem;" title="Modifier"><i class="bi bi-pencil"></i></button></div></div><div class="small" style="font-size:0.6rem;">📅 Âge: ${a.age} mois</div></div>`;
+    });
+    document.getElementById('breedingList').innerHTML = bl || '<p class="text-muted text-center">Aucune femelle</p>';
+}
+
+// ================================================
+// GESTATIONS
+// ================================================
+async function loadGestations() {
+    const espece = document.getElementById('gestationEspeceFilter').value;
+    try {
+        const r = await fetch(`/api/animaux/gestations?espece=${espece}`);
+        const d = await r.json();
+        document.getElementById('gestation-cards').innerHTML = `<div class="col-4"><div class="card p-1 text-center bg-primary text-white"><h5 class="mb-0">${d.total_enceintes}</h5><small>Enceintes</small></div></div><div class="col-4"><div class="card p-1 text-center bg-warning"><h5 class="mb-0">${d.accouchements_semaine}</h5><small>Cette semaine</small></div></div><div class="col-4"><div class="card p-1 text-center bg-danger text-white"><h5 class="mb-0">${d.accouchements_aujourdhui}</h5><small>Aujourd'hui</small></div></div>`;
+        if(!d.gestations.length){ document.getElementById('gestation-list').innerHTML='<div class="alert alert-info text-center py-2">Aucune gestation</div>'; return; }
+        let html=''; for(let g of d.gestations){
+            const icon=g.espece==='Bovin'?'🐄':g.espece==='Caprin'?'🐐':g.espece==='Ovin'?'🐑':g.espece==='Porcin'?'🐷':'🐔';
+            const bg=g.accouchement_aujourdhui?'bg-danger text-white':(g.accouchement_semaine?'bg-warning':'bg-success text-white');
+            html+=`<div class="col-md-6 col-lg-4 mb-2"><div class="card ${bg} p-2"><div class="card-body p-1"><h6 class="mb-0">${icon} ${g.identifiant}</h6><small>${g.type} - ${g.race}</small><div class="mt-1 small">📅 Accouchement: ${new Date(g.date_accouchement).toLocaleDateString('fr-FR')}</div>${g.accouchement_aujourdhui?'<div class="fw-bold mt-1">🚨 NAISSANCE AUJOURD\'HUI</div>':(g.accouchement_semaine?`<div>⚠️ Dans ${g.jours_restants} jours</div>`:'')}</div></div></div>`;
+        }
+        document.getElementById('gestation-list').innerHTML = html;
+    } catch(e){ console.error(e); }
+}
+
+// ================================================
+// PRODUCTIVITE
+// ================================================
+function calculerProdMensuelle(year, mois, type) {
+    let animauxType = [];
+    if(type==='lait') animauxType = allAnimaux.filter(a=>['Bovin','Caprin','Ovin'].includes(a.espece) && a.sexe==='Femelle');
+    else if(type==='oeufs') animauxType = allAnimaux.filter(a=>a.espece==='Volaille');
+    else animauxType = allAnimaux.filter(a=>['Bovin','Porcin','Ovin'].includes(a.espece));
+    if(!animauxType.length) return 0;
+    let total=0;
+    for(let a of animauxType){
+        let prod = (type==='lait' && a.production_lait>0) ? a.production_lait : 15;
+        if(a.age>=12 && a.age<=60) prod*=1.2;
+        else if(a.age>60) prod*=0.8;
+        else if(a.age<6) prod*=0.3;
+        total+=prod;
+    }
+    const facteurs={1:0.9,2:0.85,3:0.95,4:1.05,5:1.1,6:1.15,7:1.1,8:1.05,9:1.0,10:0.95,11:0.9,12:0.85};
+    return Math.round(total * (facteurs[mois]||1) * 30);
+}
+function loadProductiviteCalendrier() {
+    const year = parseInt(document.getElementById('productiviteYear').value);
+    const type = document.getElementById('productiviteType').value;
+    const mode = document.getElementById('productiviteMode').value;
+    let prods = [], total=0, meilleur={mois:'',val:0};
+    for(let m=1;m<=12;m++){ let p=calculerProdMensuelle(year,m,type); prods.push({nom:MOIS_FR[m-1],prod:p,jour:Math.round(p/30)}); total+=p; if(p>meilleur.val){ meilleur={mois:MOIS_FR[m-1],val:p}; }}
+    const unites={lait:'L',oeufs:'œufs',viande:'kg'};
+    document.getElementById('productivite-cards').innerHTML = `<div class="col-4"><div class="card p-1 text-center bg-success text-white"><h5 class="mb-0">${total.toLocaleString()}</h5><small>Total ${unites[type]}</small></div></div><div class="col-4"><div class="card p-1 text-center bg-primary text-white"><h5 class="mb-0">${Math.round(total/12).toLocaleString()}</h5><small>Moy/mois</small></div></div><div class="col-4"><div class="card p-1 text-center bg-warning"><h5 class="mb-0">${meilleur.mois}</h5><small>Meilleur mois</small></div></div>`;
+    Plotly.newPlot('productiviteChart',[{x:prods.map(p=>p.nom),y:prods.map(p=>p.prod),type:'bar',marker:{color:'#3498db'},text:prods.map(p=>p.prod.toLocaleString()),textposition:'auto'}],{height:280,title:`Production ${type} - ${year}`});
+    let html='<table class="table table-bordered table-sm" style="font-size:0.65rem;"><thead class="table-primary">';
+    if(mode==='mois'){
+        html+=`<tr><th>Mois</th><th>Production</th><th>Journalier</th></tr></thead><tbody>`;
+        for(let p of prods) html+=`<tr><td class="fw-bold">${p.nom}</td><td class="text-end">${p.prod.toLocaleString()} ${unites[type]}</td><td class="text-end">${p.jour.toLocaleString()} ${unites[type]}/j</td></tr>`;
+        html+=`<tr class="table-success fw-bold"><td>TOTAL</td><td class="text-end">${total.toLocaleString()} ${unites[type]}</td><td class="text-end">${Math.round(total/365).toLocaleString()} ${unites[type]}/j</td></tr>`;
+    } else {
+        let trim = [{nom:'T1 (Jan-Fév-Mar)',mois:prods.slice(0,3)},{nom:'T2 (Avr-Mai-Juin)',mois:prods.slice(3,6)},{nom:'T3 (Juil-Août-Sep)',mois:prods.slice(6,9)},{nom:'T4 (Oct-Nov-Déc)',mois:prods.slice(9,12)}];
+        html+=`<tr><th>Trimestre</th><th>Production</th><th>Moy/mois</th></tr></thead><tbody>`;
+        for(let t of trim){ let tot=t.mois.reduce((s,m)=>s+m.prod,0); html+=`<tr><td class="fw-bold">${t.nom}</td><td class="text-end">${tot.toLocaleString()} ${unites[type]}</td><td class="text-end">${Math.round(tot/3).toLocaleString()} ${unites[type]}</td>`;}
+        html+=`<tr class="table-success fw-bold"><td>TOTAL</td><td class="text-end">${total.toLocaleString()} ${unites[type]}</td><td class="text-end">${Math.round(total/12).toLocaleString()} ${unites[type]}</td></tr>`;
+    }
+    html+=`</tbody><table>`;
+    document.getElementById('productiviteTable').innerHTML = html;
+}
+
+// ================================================
+// REGRESSION & ML (fonctions simplifiées mais fonctionnelles)
+// ================================================
+window.computeLinearRegression = function() { let xv=document.getElementById('lrX').value, yv=document.getElementById('lrY').value, data=allAnimaux.filter(p=>p[xv]!=null&&p[yv]!=null&&p[xv]!==0&&p[yv]!==0); if(data.length<3){document.getElementById('lrResult').innerHTML='<span class="text-danger">Minimum 3 données</span>';return;} let x=data.map(p=>p[xv]), y=data.map(p=>p[yv]), n=x.length, sx=x.reduce((a,b)=>a+b,0), sy=y.reduce((a,b)=>a+b,0), sxy=0, sx2=0; for(let i=0;i<n;i++){sxy+=x[i]*y[i];sx2+=x[i]*x[i];} let slope=(n*sxy-sx*sy)/(n*sx2-sx*sx), intercept=(sy-slope*sx)/n, yp=x.map(xi=>slope*xi+intercept), ssRes=y.reduce((a,yi,i)=>a+(yi-yp[i])**2,0), ssTot=y.reduce((a,yi)=>a+(yi-sy/n)**2,0), r2=1-ssRes/ssTot; document.getElementById('lrResult').innerHTML=`<strong>Équation:</strong> ${varLabels[yv]} = ${slope.toFixed(4)} × ${varLabels[xv]} + ${intercept.toFixed(4)}<br><strong>R² = ${r2.toFixed(4)}</strong>`; Plotly.newPlot('lrPlot',[{x:x,y:y,mode:'markers',type:'scatter',name:'Observations'},{x:x,y:yp,mode:'lines',type:'scatter',name:'Régression',line:{color:'#e84393',width:2}}],{height:250}); };
+function mathSolve(A,b){let n=A.length, M=[]; for(let i=0;i<n;i++) M.push([...A[i],b[i]]); for(let i=0;i<n;i++){let maxRow=i; for(let k=i+1;k<n;k++) if(Math.abs(M[k][i])>Math.abs(M[maxRow][i])) maxRow=k; if(maxRow!==i)[M[i],M[maxRow]]=[M[maxRow],M[i]]; for(let k=i+1;k<n;k++){let factor=M[k][i]/M[i][i]; for(let j=i;j<=n;j++) M[k][j]-=factor*M[i][j];}} let x=new Array(n).fill(0); for(let i=n-1;i>=0;i--){let sum=0; for(let j=i+1;j<n;j++) sum+=M[i][j]*x[j]; x[i]=(M[i][n]-sum)/M[i][i];} return x; }
+window.computeMultipleRegression = function() { let yv=document.getElementById('mlY').value, selX=[...document.getElementById('mlX').selectedOptions].map(o=>o.value); if(selX.length===0){document.getElementById('mlResult').innerHTML='<div class="alert alert-warning">Sélectionnez X</div>';return;} let data=allAnimaux.filter(p=>p[yv]!=null&&selX.every(x=>p[x]!=null&&p[x]!==0)); if(data.length<selX.length+2){document.getElementById('mlResult').innerHTML=`<div class="alert alert-danger">Pas assez de données (${data.length})</div>`;return;} let n=data.length, X=[], Y=data.map(p=>p[yv]); for(let i=0;i<n;i++){let row=[1]; selX.forEach(x=>row.push(data[i][x])); X.push(row);} let Xt=[]; for(let i=0;i<X[0].length;i++){Xt.push([]); for(let j=0;j<X.length;j++) Xt[i].push(X[j][i]);} let XtX=[]; for(let i=0;i<Xt.length;i++){XtX.push([]); for(let j=0;j<Xt.length;j++){let sum=0; for(let k=0;k<Xt[i].length;k++) sum+=Xt[i][k]*Xt[j][k]; XtX[i].push(sum);}} let XtY=[]; for(let i=0;i<Xt.length;i++){let sum=0; for(let j=0;j<Xt[i].length;j++) sum+=Xt[i][j]*Y[j]; XtY.push(sum);} let coeffs=mathSolve(XtX,XtY); let yPred=[]; for(let i=0;i<X.length;i++){let pred=0; for(let j=0;j<X[i].length;j++) pred+=X[i][j]*coeffs[j]; yPred.push(pred);} let yMean=Y.reduce((a,b)=>a+b,0)/n, ssRes=0, ssTot=0; for(let i=0;i<n;i++){ssRes+=(Y[i]-yPred[i])**2; ssTot+=(Y[i]-yMean)**2;} let r2=1-ssRes/ssTot, r2adj=1-((1-r2)*(n-1)/(n-selX.length-1)); let eq=`${varLabels[yv]} = ${coeffs[0].toFixed(4)}`; for(let i=0;i<selX.length;i++){let sign=coeffs[i+1]>=0?'+':'-'; eq+=` ${sign} ${Math.abs(coeffs[i+1]).toFixed(4)}×${varLabels[selX[i]]}`;} document.getElementById('mlResult').innerHTML=`<div class="alert alert-success"><strong>R² = ${r2.toFixed(4)}</strong> | R² ajusté = ${r2adj.toFixed(4)}<br>${eq}</div>`; };
+window.runPCA = function() { let v=['age','imc','production_lait','conso_aliment','gmq'], d=allAnimaux.filter(p=>v.every(x=>p[x]!=null&&p[x]!==0)); if(d.length<3){document.getElementById('pcaResult').innerHTML='<span class="text-danger">Minimum 3 animaux</span>';return;} let mat=d.map(p=>v.map(x=>p[x])), means=v.map((_,j)=>mat.reduce((s,r)=>s+r[j],0)/mat.length), scaled=mat.map(r=>r.map((val,j)=>val-means[j])); let cov=Array(v.length).fill().map(()=>Array(v.length).fill(0)); for(let i=0;i<v.length;i++) for(let j=0;j<v.length;j++) cov[i][j]=scaled.reduce((s,r)=>s+r[i]*r[j],0)/(scaled.length-1); let n=cov.length, V=Array(n).fill().map(()=>Array(n).fill(0)); for(let i=0;i<n;i++) V[i][i]=1; for(let iter=0;iter<100;iter++){let max=0,p=0,q=0; for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.abs(cov[i][j])>max){max=Math.abs(cov[i][j]);p=i;q=j;} if(max<1e-8)break; let theta=0.5*Math.atan2(2*cov[p][q],cov[q][q]-cov[p][p]), c=Math.cos(theta), s=Math.sin(theta), nCov=cov.map(r=>[...r]); for(let i=0;i<n;i++){let aip=nCov[i][p], aiq=nCov[i][q]; nCov[i][p]=c*aip+s*aiq; nCov[i][q]=-s*aip+c*aiq;} for(let j=0;j<n;j++){let apj=nCov[p][j], aqj=nCov[q][j]; nCov[p][j]=c*apj+s*aqj; nCov[q][j]=-s*apj+c*aqj;} nCov[p][q]=0;nCov[q][p]=0; for(let i=0;i<n;i++)for(let j=0;j<n;j++)cov[i][j]=nCov[i][j]; let nV=V.map(r=>[...r]); for(let i=0;i<n;i++){let vip=nV[i][p], viq=nV[i][q]; nV[i][p]=c*vip+s*viq; nV[i][q]=-s*vip+c*viq;} V=nV;} let ev=[]; for(let i=0;i<cov.length;i++)ev.push(cov[i][i]); ev.sort((a,b)=>b-a); let total=ev.reduce((a,b)=>a+b,0), expl=ev.map(e=>e/total); let proj=scaled.map(row=>row.map((_,idx)=>row.reduce((s,val,j)=>s+val*V[j][idx],0))), pc1=proj.map(p=>p[0]), pc2=proj.map(p=>p[1]); Plotly.newPlot('pcaPlot',[{x:pc1,y:pc2,mode:'markers',type:'scatter',text:d.map(p=>`ID: ${p.identifiant}`),marker:{size:6}}],{height:300,title:`ACP - CP1 (${(expl[0]*100).toFixed(1)}%)`}); document.getElementById('pcaResult').innerHTML=`✅ CP1:${(expl[0]*100).toFixed(1)}%, CP2:${(expl[1]*100).toFixed(1)}%`; };
+window.runSupervisedClassification = function() { let d=allAnimaux.filter(p=>p.sexe&&(p.sexe==='Mâle'||p.sexe==='Femelle')&&p.age&&p.poids&&p.production_lait!=null); if(d.length<10){document.getElementById('supResult').innerHTML='<span class="text-danger">Minimum 10 animaux</span>';return;} let X=d.map(p=>[1,p.age,p.poids,p.production_lait]), y=d.map(p=>p.sexe==='Mâle'?1:0), theta=[0,0,0,0], alpha=0.001; for(let it=0;it<2000;it++){let grad=[0,0,0,0]; for(let i=0;i<X.length;i++){let z=theta.reduce((s,th,j)=>s+th*X[i][j],0), h=1/(1+Math.exp(-z)), err=h-y[i]; for(let j=0;j<4;j++) grad[j]+=err*X[i][j];} for(let j=0;j<4;j++) theta[j]-=alpha*grad[j]/X.length;} let correct=0; for(let i=0;i<X.length;i++){let z=theta.reduce((s,th,j)=>s+th*X[i][j],0), pred=1/(1+Math.exp(-z))>=0.5?1:0; if(pred===y[i]) correct++;} let acc=correct/X.length; document.getElementById('supResult').innerHTML=`<strong>Précision: ${(acc*100).toFixed(1)}%</strong><br>Coefficients: intercept=${theta[0].toFixed(3)}, âge=${theta[1].toFixed(3)}, poids=${theta[2].toFixed(3)}, lait=${theta[3].toFixed(3)}`; };
+window.runKMeans = function() { let k=parseInt(document.getElementById('kValue').value), d=allAnimaux.filter(p=>p.age!=null&&p.poids!=null&&p.production_lait!=null&&p.age!==0&&p.poids!==0); if(d.length<k){document.getElementById('kmeansResult').innerHTML=`<span class="text-danger">Minimum ${k} animaux</span>`;return;} let pts=d.map(p=>[p.age,p.poids,p.production_lait]), cent=pts.slice(0,k).map(p=>[...p]), labels=new Array(pts.length).fill(0); for(let iter=0;iter<100;iter++){for(let i=0;i<pts.length;i++){let minD=Infinity,best=0; for(let c=0;c<k;c++){let d2=Math.hypot(pts[i][0]-cent[c][0],pts[i][1]-cent[c][1],pts[i][2]-cent[c][2]); if(d2<minD){minD=d2;best=c;}} labels[i]=best;} let newC=Array(k).fill().map(()=>[0,0,0]), counts=Array(k).fill(0); for(let i=0;i<pts.length;i++){let c=labels[i]; newC[c][0]+=pts[i][0]; newC[c][1]+=pts[i][1]; newC[c][2]+=pts[i][2]; counts[c]++;} for(let c=0;c<k;c++)if(counts[c]>0){newC[c][0]/=counts[c];newC[c][1]/=counts[c];newC[c][2]/=counts[c];} let diff=0; for(let c=0;c<k;c++)diff+=Math.hypot(cent[c][0]-newC[c][0],cent[c][1]-newC[c][1],cent[c][2]-newC[c][2]); cent=newC; if(diff<0.001)break;} let cols=['#e84393','#2d6a4f','#00b894','#fdcb6e','#e17055'], traces=[]; for(let c=0;c<k;c++){let cluster=pts.filter((_,idx)=>labels[idx]===c); if(cluster.length) traces.push({x:cluster.map(p=>p[0]),y:cluster.map(p=>p[1]),mode:'markers',type:'scatter',name:`Cluster ${c+1} (${cluster.length})`,marker:{color:cols[c%cols.length],size:6}});} traces.push({x:cent.map(c=>c[0]),y:cent.map(c=>c[1]),mode:'markers',type:'scatter',name:'Centroïdes',marker:{color:'black',size:10,symbol:'x'}}); Plotly.newPlot('kmeansPlot',traces,{height:300,title:`K-means (k=${k}) : Âge vs Poids`}); document.getElementById('kmeansResult').innerHTML=`✅ ${k} clusters formés`; };
+
+// ================================================
+// STATISTIQUES
+// ================================================
+async function loadStatistiques() {
+    try {
+        const r = await fetch('/api/stats/descriptives'); const s = await r.json();
+        const ra = await fetch('/api/animaux'); const animaux = await ra.json();
+        if(!s.total) return;
+        let h=`<div class="table-responsive"><table class="table table-bordered table-sm" style="font-size:0.65rem;"><thead><tr><th>Variable</th><th>n</th><th>Moy</th><th>Écart-type</th><th>Min</th><th>Max</th></tr></thead><tbody>`;
+        for(let v of numericVars) if(s[v]&&s[v].count>0) h+=`<tr><td class="fw-bold">${varLabels[v]}</td><td class="text-center">${s[v].count}</td><td class="text-end">${s[v].moyenne}</td><td class="text-end">${s[v].ecart_type}</td><td class="text-end">${s[v].minimum}</td><td class="text-end">${s[v].maximum}</td>`;
+        h+=`</tbody></table></div>`; document.getElementById('stats-table-container').innerHTML = h;
+        Plotly.newPlot('histAge',[{x:animaux.map(p=>p.age).filter(a=>a),type:'histogram',marker:{color:'#2d6a4f'}}],{height:240,title:'Distribution des âges'});
+        Plotly.newPlot('histPoids',[{x:animaux.map(p=>p.poids).filter(a=>a),type:'histogram',marker:{color:'#FF8F00'}}],{height:240,title:'Distribution des poids'});
+        document.getElementById('conseils-productivite').innerHTML = '<div class="alert alert-info py-1" style="font-size:0.7rem;">🥛 Optimisez la ration protéinée</div><div class="alert alert-warning py-1" style="font-size:0.7rem;">🔄 Suivez le calendrier de reproduction</div>';
+        let especes=[...new Set(animaux.map(a=>a.espece))];
+        document.getElementById('stats-overview').innerHTML = `<div class="col-3"><div class="stats-overview-card"><div class="stats-value">${s.total}</div><div class="stats-label">Total</div></div></div><div class="col-3"><div class="stats-overview-card accent"><div class="stats-value">${s.poids?.moyenne||'--'} kg</div><div class="stats-label">Poids</div></div></div><div class="col-3"><div class="stats-overview-card info"><div class="stats-value">${s.production_lait?.moyenne||'--'} L</div><div class="stats-label">Lait</div></div></div><div class="col-3"><div class="stats-overview-card"><div class="stats-value">${especes.length}</div><div class="stats-label">Espèces</div></div></div>`;
+        document.getElementById('stats-insights').innerHTML = `<div class="alert alert-success py-1" style="font-size:0.7rem;">📊 Analyse terminée</div>`;
+    } catch(e){}
+}
+
+window.addEventListener('load', () => { loadHeroStats(); updateIdentifiantPreview(); });
+</script>
+</body>
+</html>
